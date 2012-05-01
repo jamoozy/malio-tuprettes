@@ -1,27 +1,50 @@
 #!/usr/bin/python
+#
+# Copyright 2012 Andrew "Jamoozy" Correa
+#
+# This file is part of Malio Tuprettes.
+#
+# Malio Tuprettes is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# Foobar is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# Malio Tuprettes. If not, see http://www.gnu.org/licenses/.
+
 
 import pygame, sys
 from pygame.locals import *
 
 class Player:
+  '''Represents a player.  Keeps track of player's state.'''
   def __init__(self, pnum):
     self.number = pnum
 
   def update(self, pressed):
-    if pressed[pygame.key.K_s]:
-      pass # go left
-    elif pressed[pygame.key.K_d]:
-      pass # duck
-    elif pressed[pygame.key.K_f]:
-      pass # go right
-    elif pressed[pygame.key.K_e]:
-      pass # climb/door
-    elif pressed[pygame.key.K_j]:
-      pass # action
-    elif pressed[pygame.key.K_k]:
-      pass # jump
-    elif pressed[pygame.key.K_l]:
-      pass # special
+    if pressed[pygame.K_s]:
+      self._left()
+    elif pressed[pygame.K_d]:
+      self._down()
+    elif pressed[pygame.K_f]:
+      self._right()
+    elif pressed[pygame.K_e]:
+      self._up()
+    elif pressed[pygame.K_j]:
+      self._action()
+    elif pressed[pygame.K_k]:
+      self._jump()
+    elif pressed[pygame.K_i]:
+      self._special()
+    elif pressed[pygame.K_l]:
+      self._spin()
+
+  def draw(self, window):
+    pass
 
 class Chunk:
   def __init__(self):
@@ -32,8 +55,12 @@ class Chunk:
 
 class World:
   def __init__(self):
-    self.progress = 0
-    self.chunks = []
+    self.pos = (0,0)
+    self.chunks = [[]]
+
+  def load(self, fname):
+    '''fname: the name of the file stored in ... some format.'''
+    pass
 
   def paint(self, screen):
     for i in xrange(max(0, self.progress-1), min(self.progress+1,len(self.chunks))):
@@ -79,4 +106,4 @@ class Game:
       self.clock.tick(30)
 
 if __name__ == '__main__':
-  Game().run()
+  Game(1).run()
