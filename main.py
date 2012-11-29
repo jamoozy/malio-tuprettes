@@ -9,9 +9,9 @@
 # Foundation, either version 3 of the License, or (at your option) any later
 # version.
 #
-# Foobar is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# Mali Tuprettes is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along with
 # Malio Tuprettes. If not, see http://www.gnu.org/licenses/.
@@ -20,12 +20,19 @@
 import pygame, sys
 from pygame.locals import *
 
+class Config:
+  '''Represents a config file for this game.'''
+  def __init__(self, obj):
+    pass
+
 class Player:
   '''Represents a player.  Keeps track of player's state.'''
   def __init__(self, pnum):
+    '''Creates a new player with the given ID.'''
     self.number = pnum
 
   def update(self, pressed):
+    '''Updates the player based on what all was pressed.'''
     if pressed[pygame.K_s]:
       self._left()
     elif pressed[pygame.K_d]:
@@ -46,30 +53,11 @@ class Player:
   def draw(self, window):
     pass
 
-class Chunk:
-  def __init__(self):
-    pass
-
-  def paint(self, screen):
-    pass
-
-class World:
-  def __init__(self):
-    self.pos = (0,0)
-    self.chunks = [[]]
-
-  def load(self, fname):
-    '''fname: the name of the file stored in ... some format.'''
-    pass
-
-  def paint(self, screen):
-    for i in xrange(max(0, self.progress-1), min(self.progress+1,len(self.chunks))):
-      self.chunks[i].paint(screen)
-
 class Game:
   '''The game to run.'''
-  def __init__(self, num_players):
-    self.players = map(lambda i: Player(i), range(num_players))
+  def __init__(self, config):
+    self.config = config
+    self.players = map(lambda i: Player(i), range(config.num_players))
     self.world = World()
 
     pygame.init()
@@ -79,9 +67,10 @@ class Game:
     pygame.display.set_caption('Game')
     self.bg_color = pygame.Color(0, 0, 220)
 
-    # Load additional textures and things.
+    # TODO Load additional textures and things.
 
   def run(self):
+    '''Runs the game.'''
     while True:
       self.screen.fill(self.bg_color)
 
@@ -106,4 +95,14 @@ class Game:
       self.clock.tick(30)
 
 if __name__ == '__main__':
-  Game(1).run()
+  from optparse import OptionParser
+  from StringIO import StringIO
+  parser = OptionParser()
+  parser.add_option("-f", "--config-file", dest="cf",
+                    help="Read config from FILE", metavar="FILE"
+                    default="~/.malio-tuprettes")
+  (options, args) = parser.parse_args()
+
+  config = Config(json.load(open(options.cf, 'r')))
+
+  Game(config).run()
