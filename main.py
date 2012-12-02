@@ -9,7 +9,7 @@
 # Foundation, either version 3 of the License, or (at your option) any later
 # version.
 #
-# Mali Tuprettes is distributed in the hope that it will be useful, but WITHOUT
+# Malio Tuprettes is distributed in the hope that it will be useful, but WITHOUT
 # ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 # FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
@@ -25,33 +25,6 @@ class Config:
   def __init__(self, obj):
     pass
 
-class Player:
-  '''Represents a player.  Keeps track of player's state.'''
-  def __init__(self, pnum):
-    '''Creates a new player with the given ID.'''
-    self.number = pnum
-
-  def update(self, pressed):
-    '''Updates the player based on what all was pressed.'''
-    if pressed[pygame.K_s]:
-      self._left()
-    elif pressed[pygame.K_d]:
-      self._down()
-    elif pressed[pygame.K_f]:
-      self._right()
-    elif pressed[pygame.K_e]:
-      self._up()
-    elif pressed[pygame.K_j]:
-      self._action()
-    elif pressed[pygame.K_k]:
-      self._jump()
-    elif pressed[pygame.K_i]:
-      self._special()
-    elif pressed[pygame.K_l]:
-      self._spin()
-
-  def draw(self, window):
-    pass
 
 class Game:
   '''The game to run.'''
