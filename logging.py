@@ -17,6 +17,10 @@
 # Malio Tuprettes. If not, see http://www.gnu.org/licenses/.
 
 
+import os
+from tempfile import mkstemp
+
+
 LEVEL_SILENT = -2
 '''Do not print anything.  Not ever.'''
 LEVEL_QUIET = -1
@@ -32,6 +36,61 @@ _level = LEVEL_DEBUG
 '''The logging level.  This value dictates when this module prints. the
 arguments passed to its methods.'''
 
+
+class FileLogger():
+  '''A file logger; an object that logs output to a file.'''
+  prefix = "mt"
+  suffix = ".log"
+
+  def __init__(self, level, prev=None, prefix=None, suffix=None, **kwargs):
+    '''Initializes the logger.  Default values are provided.
+
+    Args:
+      level, int: The logging level.
+      prev, FileLogger: Previously initialized `FileLogger` (if any).
+      kwargs, hash: The kwargs to pass to `tempfile.mkstemp`.
+
+    Raises:
+      ValueError: If `prev` is anything but a FileLogger or None.
+    '''
+    self.level = level
+    self.prefix = prefix or self.prefix
+    self.suffix = suffix or self.suffix
+    if prev is None:
+      fd, self.fname = mkstemp(self.suffix, self.prefix, **kwargs)
+      os.close(fd)
+    elif isinstance(prev, FileLogger):
+      self.fname = prev.fname
+    else:
+      raise ValueError("prev:%s not a FileLogger" % prev)
+
+  def log(self, *lines):
+    '''Logs the lines.
+
+    Args:
+      lines, [str]: List of strings to log (or empy).
+    '''
+    with open(self.fname, 'a') as f:
+      f.writelines([str(e) + '\n' for e in lines])
+
+file_logger = FileLogger()
+'''The file logger this module uses to log files.'''
+
+
+def init_file_logger(**kwargs):
+  '''Inits the `file_logger` with the passed `kwargs`.  If this function is
+  never called, 
+
+  Args:
+    kwargs: The kwargs to pass on to `FileLogger()`.
+
+  Returns:
+    The newly-created `file_logger` object.
+  '''
+  if "level" not in kwargs:
+    kwargs["level"] = _level
+  file_logger = FileLogger(prev=file_logger, **kwargs)
+  return file_logger
 
 def error(*args):
   '''Prints the message(s) with the string "Error:" prepended unless the current
