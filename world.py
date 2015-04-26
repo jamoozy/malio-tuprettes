@@ -46,7 +46,7 @@ class Level:
     pickle.Pickler(self, open(fname, 'w'))
 
   def paint(self, screen):
-    for i in xrange(max(0, self.progress-1), min(self.progress+1,len(self.chunks))):
+    for i in xrange(max(0, self.progress-1), min(self.progress + 1, len(self.chunks))):
       self.chunks[i].paint(screen)
 
   @staticmethod
