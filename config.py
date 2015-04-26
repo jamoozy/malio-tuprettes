@@ -72,6 +72,11 @@ class PlayerConfig():
     Args:
       obj, dict: A player config file as described above.
 
+    Raises:
+      ValueError: If one of the keycode values is neither an `int` nor a `str`,
+                  or if a value could not be parsed,
+                  or if not all values were specified for the config.
+
     Returns:
       The config.
     '''
@@ -80,21 +85,35 @@ class PlayerConfig():
       if isinstance(val, int):
         setattr(self, attr, val)
       elif isinstance(val, str):
-        if val.startswith("pygame."):
-          setattr(self, attr, eval(val[7:]))
-        elif val.startswith("K_"):
-          setattr(self, attr, eval(val))
+        # String values we support include the (more or less) human-readable
+        # character code, e.g., "a" or "up"
+        if val.startswith("pygame.K_"):
+          self._setattr(attr, val[len("pygame.K_"):])
+        elif val.startswith("K_") or val.startswith("k_"):
+          self._setattr(attr, val[len("K_"):])
         else:
-          setattr(self, attr, eval("K_" + val))
-      elif val is None:
-        setattr(self, attr, None)
-        wrn('player config is blank: "%s"' % attr)
+          self._setattr(attr, val)
       else:
         raise ValueError("Unrecognized key code: %s" % val)
 
+  def _setattr(self, name, val):
+    # Try these three separate values, in order.
+    for _val in ["K_" + val, "K_" + val.upper(), "K_" + val.lower(),
+                 "KMOD_" + val.upper()]:
+      try:
+        setattr(self, name, eval(_val))
+        return
+      except NameError:
+        pass # Okay, that one doesn't exist ... on to the next.
+    raise ValueError('Could not find match for keycode: "%s"' % val)
 
   def _to_dict(self):
     return { attr: getattr(self, attr) for attr in self.attrs }
+
+  def __str__(self):
+    return ", ".join([
+      "self.%s: %d" % (attr, getattr(self, attr)) for attr in self.attrs
+    ])
 
 
 class Config:
