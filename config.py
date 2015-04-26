@@ -21,9 +21,9 @@ import json
 
 from pygame import *
 
-from debug import debug as dbg
-from debug import warning as wrn
-from debug import error as err
+from logging import debug as dbg
+from logging import warning as wrn
+from logging import error as err
 
 
 DEFAULT_PATH = os.path.join(os.path.expanduser('~'), '.malio-tuprettes')
