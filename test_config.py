@@ -48,26 +48,28 @@ player_config_objs = {
 
 def test_player_config_init():
   # Test all the types of configurations this should accept.
+  expected = zip(config.PlayerConfig.attrs,
+                 [K_a, K_b, K_c, K_d, K_e, K_f, K_g, K_h])
   for obj in player_config_objs.itervalues():
-    yield _player_config_init, obj
+    yield _player_config_init, obj, expected
 
 
-def _player_config_init(obj):
+def _player_config_init(obj, exp):
   '''Tests the config.PlayerConfig constructur.  Assumes the letters "a"-"h" are
   being assigned to the variables in `config.PlayerConfig.attrs` in the order
   they appear in the list.
 
   Args:
     objs, dict: The object to initialize a config.PlayerConfig with.
+    exp, [(str, keycode)]: The expected relation between attributes and
+                           keycodes.
   '''
   pc = config.PlayerConfig(obj)
-  for attr, pyvar in zip(pc.attrs, [K_a, K_b, K_c, K_d, K_e, K_f, K_g, K_h]):
+  for attr, pyvar in exp:
     assert getattr(pc, attr) == pyvar, "attr:%s exp:%s was:%s" % (
       attr, pyvar, getattr(pc, attr))
 
 
 
-
 if __name__ == '__main__':
-  from sys import stderr, exit
   nose.main()
