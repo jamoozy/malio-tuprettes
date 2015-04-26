@@ -30,31 +30,67 @@ import config
 ################################################################################
 
 player_config_objs = {
+  # Real-ish config.
+  "real": (["up", "down", "left", "right", "ctrl", "space", "z", "x"],
+           [K_UP, K_DOWN, K_LEFT, K_RIGHT, KMOD_CTRL, K_SPACE, K_z, K_x]),
+
+  # "real" with all caps
+  "REAL": (["UP", "DOWN", "LEFT", "RIGHT", "CTRL", "SPACE", "Z", "X"],
+           [K_UP, K_DOWN, K_LEFT, K_RIGHT, KMOD_CTRL, K_SPACE, K_z, K_x]),
+
+  # Same as above, but altered a bit.
+  "altered": (["e", "d", "s", "r", "j", "k", "l", "i"],
+              [K_e, K_d, K_s, K_r, K_j, K_k, K_l, K_i]),
+
+  # "altered" with all caps
+  "ALTERED": (["e", "d", "s", "r", "j", "k", "l", "i"],
+              [K_e, K_d, K_s, K_r, K_j, K_k, K_l, K_i]),
+
   # The numerical codes for a-h (97 - 104).
-  "numeric": dict(zip(config.PlayerConfig.attrs, range(97, 97 + 8))),
+  "numeric": (range(97, 97 + 8), [K_a, K_b, K_c, K_d, K_e, K_f, K_g, K_h]),
 
   # The string values "a"-"h".
-  "letter": dict(zip(config.PlayerConfig.attrs, map(chr, range(97, 97 + 8)))),
+  "letter": (map(chr, range(97, 97 + 8)),
+             [K_a, K_b, K_c, K_d, K_e, K_f, K_g, K_h]),
+
+  # The string values "A"-"H" (wrong case -- should work anyway)
+  "LETTER": (map(chr, range(65, 65 + 8)),
+             [K_a, K_b, K_c, K_d, K_e, K_f, K_g, K_h]),
 
   # The string values "K_a"-"K_h".
-  "K_letter": dict(zip(config.PlayerConfig.attrs,
-                       ["K_" + chr(i) for i in range(97, 97 + 8)])),
+  "K_letter": (["K_" + chr(i) for i in range(97, 97 + 8)],
+               [K_a, K_b, K_c, K_d, K_e, K_f, K_g, K_h]),
+
+  # The string values "K_A"-"K_H" (wrong case -- should work anyway).
+  "K_LETTER": (["K_" + chr(i) for i in range(65, 65 + 8)],
+               [K_a, K_b, K_c, K_d, K_e, K_f, K_g, K_h]),
 
   # The string values "pygame.K_a"-"pygame.K_h".
-  "pygame": dict(zip(config.PlayerConfig.attrs,
-                     ["pygame.K_" + chr(i) for i in range(97, 97 + 8)]))
+  "pygame": (["pygame.K_" + chr(i) for i in range(97, 97 + 8)],
+             [K_a, K_b, K_c, K_d, K_e, K_f, K_g, K_h]),
+
+  # The string values "pygame.K_a"-"pygame.K_h".
+  "PYGAME": (["pygame.K_" + chr(i) for i in range(65, 65 + 8)],
+             [K_a, K_b, K_c, K_d, K_e, K_f, K_g, K_h])
 }
 
+# ---- PlayerConfig.__init__() ----
 
-def test_player_config_init():
-  # Test all the types of configurations this should accept.
-  expected = zip(config.PlayerConfig.attrs,
-                 [K_a, K_b, K_c, K_d, K_e, K_f, K_g, K_h])
-  for obj in player_config_objs.itervalues():
-    yield _player_config_init, obj, expected
+def test_player_config___init__():
+  '''Tests all the types of keycode values this should accept.'''
+  for obj, exp in player_config_objs.itervalues():
+    arg = dict(zip(config.PlayerConfig.attrs, obj))
+    exp = zip(config.PlayerConfig.attrs, exp)
+    yield _player_config___init__, arg, exp
 
+def test_player_config___init___ValueError():
+  '''Tests other keycode values throw `ValueError`s.'''
+  bogus_values = "wut", [], {}, [K_a], 
+  for bogus_value in bogus_values:
+    obj = { attr: bogus_value for attr in config.PlayerConfig.attrs }
+    yield _player_config___init__ValueError, obj, bogus_value
 
-def _player_config_init(obj, exp):
+def _player_config___init__(obj, exp):
   '''Tests the config.PlayerConfig constructur.  Assumes the letters "a"-"h" are
   being assigned to the variables in `config.PlayerConfig.attrs` in the order
   they appear in the list.
@@ -63,12 +99,29 @@ def _player_config_init(obj, exp):
     objs, dict: The object to initialize a config.PlayerConfig with.
     exp, [(str, keycode)]: The expected relation between attributes and
                            keycodes.
+
+  Returns:
+    The created `PlayerConfig` (for error messages).
   '''
   pc = config.PlayerConfig(obj)
   for attr, pyvar in exp:
     assert getattr(pc, attr) == pyvar, "attr:%s exp:%s was:%s" % (
       attr, pyvar, getattr(pc, attr))
+  return pc
 
+def _player_config___init__ValueError(obj, bogus_value):
+  try:
+    pc = _player_config___init__(obj, None)
+    assert 0, 'Did not throw ValueError for "%s", got %s' % (bogus_value, pc)
+  except ValueError:
+    pass # expected
+
+
+# ---- PlayerConfig._to_dict() ----
+
+#def test_player_config__to_dict():
+#  for 
+#    yield _player_config__to_dict, 
 
 
 if __name__ == '__main__':
