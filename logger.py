@@ -37,7 +37,7 @@ _level = LEVEL_DEBUG
 arguments passed to its methods.'''
 
 
-class FileLogger():
+class FileLogger(object):
   '''A file logger; an object that logs output to a file.'''
   prefix = "mt"
   suffix = ".log"

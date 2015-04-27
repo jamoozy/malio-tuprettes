@@ -43,7 +43,7 @@ DEFAULT_CONFIG = {
 }
 '''The default configuration for Malio Tuprettes.'''
 
-class PlayerConfig():
+class PlayerConfig(object):
   '''Configs a player.'''
 
   attrs = ["up", "down", "left", "right", "action", "jump", "special", "spin"]
@@ -73,7 +73,7 @@ class PlayerConfig():
       obj, dict: A player config file as described above.
 
     Raises:
-      ValueError: If one of the keycode values is neither an `int` nor a `str`,
+      ParseError: If one of the keycode values is neither an `int` nor a `str`,
                   or if a value could not be parsed,
                   or if not all values were specified for the config.
 
@@ -94,29 +94,53 @@ class PlayerConfig():
         else:
           self._setattr(attr, val)
       else:
-        raise ValueError("Unrecognized key code: %s" % val)
+        raise ParseError("Unrecognized key code: %s" % val, obj)
 
   def _setattr(self, name, val):
+    '''Set `self`'s attribute, named "`name`", to `val`.  Tries several
+    variations of `val`'s contents, including upper and lower-case versions with
+    `"K_"` and `"KMOD_"` prepended.
+
+    Args:
+      name, str: Name of the attribute to attempt to set.
+      val, str: The string value to attempt variations on.
+
+    Raises:
+      ParseError: If none of the variations work.
+    '''
     # Try these three separate values, in order.
-    for _val in ["K_" + val, "K_" + val.upper(), "K_" + val.lower(),
-                 "KMOD_" + val.upper()]:
+    possibilities = ["K_" + val, "K_" + val.upper(), "K_" + val.lower(),
+                     "KMOD_" + val.upper()]
+    for _val in possibilities:
       try:
         setattr(self, name, eval(_val))
         return
       except NameError:
         pass # Okay, that one doesn't exist ... on to the next.
-    raise ValueError('Could not find match for keycode: "%s"' % val)
+    raise ParseError('Could not find match for keycode: "%s"' % val,
+                     'self.%s = %s' % (name, possibilities))
 
   def _to_dict(self):
-    return { attr: getattr(self, attr) for attr in self.attrs }
+    '''Converts the `PlayerConfig` into a `dict`, ready to be written to file.
+
+    Returns:
+      This `PlayerConfig`, converted to its `dict` representation.
+    '''
+    return {attr: getattr(self, attr) for attr in self.attrs}
 
   def __str__(self):
+    '''Converts the `PlayerConfig` object to a pretty string, listing all its
+    properties.
+
+    Returns:
+      The pretty string.
+    '''
     return ", ".join([
       "self.%s: %d" % (attr, getattr(self, attr)) for attr in self.attrs
     ])
 
 
-class Config:
+class Config(object):
   '''Represents a config file for this game.'''
 
   def __init__(self, obj):
@@ -125,13 +149,8 @@ class Config:
     Args:
       obj, dict: The configuration object.
     '''
-    # Build all four players.
-    PLAYER_KEYS = ['p1', 'p2', 'p3', 'p4']
-    for i, key in enumerate(PLAYER_KEYS):
-      if key not in obj:
-        break
-
-      self.p[i] = PlayerConfig(obj[key])
+    # Build player configs.
+    self.players = [PlayerConfig(p) for p in obj.pop("players")]
 
     if obj.keys():
       print 'Warning: %d unused values detected:\n %s' % (len(obj), obj.keys())
@@ -161,12 +180,25 @@ def load(cls, fname=None):
     fname, str: The file name.
 
   Throws:
-    ValueError: If the config file was malformatted.
+    ParseError: If the config file was malformatted.
+
+  Returns:
+    The `Config` object found in fname.
   '''
   fname = fname or DEFAULT_PATH
 
-  with open(args.cf) as f:
+  with open(fname) as f:
     file_contents = "".join(f.readlines())
   dbg('got', file_contents)
 
-  c = config.Config(json.loads(file_contents))
+  return Config(json.loads(file_contents))
+
+
+class ParseError(Exception):
+  def __init__(self, msg, file_contents):
+    self.message = msg
+    self.file_contents = file_contents
+
+  def __str__(self):
+    return "ParseError: %s\nFile contents:%s" % (
+        self.message, self.file_contents)

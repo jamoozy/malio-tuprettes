@@ -17,12 +17,45 @@
 # Malio Tuprettes. If not, see http://www.gnu.org/licenses/.
 
 
+import mock
 import nose
 
 from pygame import *
 
 import config
 
+
+
+################################################################################
+#                       More Sohpisticated Mock Objects                        #
+################################################################################
+
+
+class PMPlayerConfig(config.PlayerConfig):
+  '''Partical mock of `PlayerConfig`.'''
+  def __init__(self, **kwargs):
+    '''Initializes this object.'''
+    self.kwargs = kwargs
+    for kw in kwargs:
+      setattr(self, kw, kwargs[kw])
+
+  def patch(self, kwargs):
+    '''Patches all the attributes of this object with the names enumerated in
+    the args.
+
+    Args:
+      args, str: Names of the attributes.
+
+    Returns:
+      `self`, for convenience.
+    '''
+    return self.kwargs.update(kwargs)
+
+  def __getattr__(self, attr):
+    try:
+      return self.kwargs[attr]
+    except KeyError:
+      return super(object).__getattribute__(attr)
 
 
 ################################################################################
@@ -83,12 +116,12 @@ def test_player_config___init__():
     exp = zip(config.PlayerConfig.attrs, exp)
     yield _player_config___init__, arg, exp
 
-def test_player_config___init___ValueError():
-  '''Tests other keycode values throw `ValueError`s.'''
+def test_player_config___init___ParseError():
+  '''Tests other keycode values throw `ParseError`s.'''
   bogus_values = "wut", [], {}, [K_a], 
   for bogus_value in bogus_values:
     obj = { attr: bogus_value for attr in config.PlayerConfig.attrs }
-    yield _player_config___init__ValueError, obj, bogus_value
+    yield _player_config___init__ParseError, obj, bogus_value
 
 def _player_config___init__(obj, exp):
   '''Tests the config.PlayerConfig constructur.  Assumes the letters "a"-"h" are
@@ -109,20 +142,36 @@ def _player_config___init__(obj, exp):
       attr, pyvar, getattr(pc, attr))
   return pc
 
-def _player_config___init__ValueError(obj, bogus_value):
+def _player_config___init__ParseError(obj, bogus_value):
   try:
     pc = _player_config___init__(obj, None)
-    assert 0, 'Did not throw ValueError for "%s", got %s' % (bogus_value, pc)
-  except ValueError:
+    assert 0, 'Did not throw ParseError for "%s", got %s' % (bogus_value, pc)
+  except config.ParseError:
     pass # expected
 
 
 # ---- PlayerConfig._to_dict() ----
 
-#def test_player_config__to_dict():
-#  for 
-#    yield _player_config__to_dict, 
+good_pm_dicts = [
+  dict(zip(config.PlayerConfig.attrs, player_config_objs["real"][1])),
+  dict(zip(config.PlayerConfig.attrs, player_config_objs["REAL"][1])),
+]
 
+def test_player_config__to_dict():
+  for pm_dict in good_pm_dicts:
+    pm = PMPlayerConfig(**pm_dict)
+    yield _player_config__to_dict, pm, pm_dict
+
+
+def _player_config__to_dict(pm, pm_dict):
+  '''Compares the dictionary returned by `pm._to_dict` and `pm_dict`.
+
+  Args:
+    pm, PMPlayerConfig: The PLayerConfig to test.
+    pm_dict, dict: The expected dictionary.
+  '''
+  rtn = pm._to_dict()
+  assert rtn == pm_dict, 'Returned:%s expected:%s' % (rtn, pm_dict)
 
 if __name__ == '__main__':
   nose.main()

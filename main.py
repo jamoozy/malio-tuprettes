@@ -17,20 +17,22 @@
 # Malio Tuprettes. If not, see http://www.gnu.org/licenses/.
 
 
-import pygame, sys
+import os
+import sys
+
+import pygame
 from pygame.locals import *
 
-class Config:
-  '''Represents a config file for this game.'''
-  def __init__(self, obj):
-    pass
+import config
+import logger
+from logger import debug as dbg
 
 
-class Game:
+class Game(object):
   '''The game to run.'''
   def __init__(self, config):
     self.config = config
-    self.players = map(lambda i: Player(i), range(config.num_players))
+    self.players = [Player(pconf) for pconf in config.players]
     self.world = World()
 
     pygame.init()
@@ -67,15 +69,37 @@ class Game:
       pygame.display.update()
       self.clock.tick(30)
 
-if __name__ == '__main__':
-  from optparse import OptionParser
-  from StringIO import StringIO
-  parser = OptionParser()
-  parser.add_option("-f", "--config-file", dest="cf",
-                    help="Read config from FILE", metavar="FILE"
-                    default="~/.malio-tuprettes")
-  (options, args) = parser.parse_args()
 
-  config = Config(json.load(open(options.cf, 'r')))
+def main(args):
+  import json
+  from argparse import ArgumentParser
+
+  parser = ArgumentParser(description="")
+  parser.add_argument("-f", "--config-file", dest="cf",
+                      help="Read config from FILE", metavar="FILE",
+                      default=config.DEFAULT_PATH)
+  parser.add_argument("-d", "--debug", help="Turn on debugging info.",
+                      type=bool, default=False)
+  args = parser.parse_args(args)
+
+  # Set up debugging state.
+  if args.debug:
+    debug.enable()
+
+  # Load config file.
+  if os.path.isfile(args.cf):
+    try:
+      c = config.load(args.cf)
+    except config.ParseError as ve:
+      print 'Could not decode the config file: "%s" \n:%s.\nContents:\n%s' % (
+              args.cf, ve.message, file_contents)
+      sys.exit(-1)
+  else:
+    c = config.load()
+    c.save()
 
   Game(config).run()
+
+
+if __name__ == '__main__':
+  main(sys.argv[1:])

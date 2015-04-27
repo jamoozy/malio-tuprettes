@@ -17,6 +17,7 @@
 
 class Player:
   '''Represents a player.  Keeps track of player's state.'''
+
   def __init__(self, pnum, pconfig=None):
     '''Creates a new player with the given ID.'''
     self.number = pnum
@@ -24,28 +25,21 @@ class Player:
 
   def config(self, config):
     '''Sets player config to config.'''
-    pass
+    for attr in main.PlayerConfig.attrs:
+      setattr(self.controls, attr, getattr(config, attr))
 
   def update(self, pressed):
-    '''Updates the player based on what all was pressed.'''
-    if pressed[pygame.K_s]:
-      self._left()
-    elif pressed[pygame.K_d]:
-      self._down()
-    elif pressed[pygame.K_f]:
-      self._right()
-    elif pressed[pygame.K_e]:
-      self._up()
-    elif pressed[pygame.K_j]:
-      self._action()
-    elif pressed[pygame.K_k]:
-      self._jump()
-    elif pressed[pygame.K_i]:
-      self._special()
-    elif pressed[pygame.K_l]:
-      self._spin()
+    '''Updates the player's state based on which buttons were pressed.
+
+    Args:
+      The buttons that were pressed.
+    '''
+    for attr in main.PlayerConfig.attrs:
+      if pressed[getattr(self.controls, attr)]:
+        getattr(self, '_' + attr).__call__()
 
   def draw(self, window):
+    '''Draws the user.'''
     pass
 
 
@@ -58,5 +52,3 @@ class PowerUp:
   '''Common super-class for all power ups.'''
   def __init__(self):
     pass
-
-class
